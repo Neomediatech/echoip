@@ -11,6 +11,7 @@ services:
     networks:
       - private
       - traefik-public
+    command: ["--trusted-header=X-Real-IP", "-r"]
     deploy:
       mode: replicated
       replicas: 1
@@ -27,13 +28,14 @@ services:
         - "traefik.docker.network=traefik-public"
         - "traefik.port=8080"
         - "traefik.tags=traefik-public"
-        - "traefik.redirectorservice.frontend.entryPoints=http"
-        - "traefik.redirectorservice.frontend.redirect.entryPoint=https"
-        - "traefik.webservice.frontend.entryPoints=https"
+        - "traefik.redirectorservice.frontend.entryPoints=http,https"
         - "traefik.frontend.rule=Host:ip.${DOMAIN}"
-        - "traefik.frontend.headers.SSLRedirect=true"
         - "traefik.frontend.entryPoints=http,https"
         - "traefik.frontend.passHostHeader=true"
+        - "traefik.frontend.rateLimit.rateSet.test.period=10s"
+        - "traefik.frontend.rateLimit.rateSet.test.burst=5"
+        - "traefik.frontend.rateLimit.rateSet.test.average=4"
+        - "traefik.frontend.rateLimit.extractorFunc=client.ip"
     volumes:
       - ${STACK_BASE_PATH}/index.html:/opt/echoip/index.html:ro
 
