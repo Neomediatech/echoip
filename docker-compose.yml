@@ -1,0 +1,47 @@
+# WARNING: This stack depends on traefik.yml stack
+# STACK_BASE_PATH [base folder where to host files, must exists]
+# DOMAIN: base domain for LE certificates
+
+version: '3.7'
+
+services:
+  echoip:
+    image: neomediatech/echoip
+    hostname: echoip
+    networks:
+      - private
+      - traefik-public
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: any
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-public"
+        - "traefik.port=80"
+        - "traefik.tags=traefik-public"
+        - "traefik.redirectorservice.frontend.entryPoints=http"
+        - "traefik.redirectorservice.frontend.redirect.entryPoint=https"
+        - "traefik.webservice.frontend.entryPoints=https"
+        - "traefik.frontend.rule=Host:ip.${DOMAIN}"
+        - "traefik.frontend.headers.SSLRedirect=true"
+        - "traefik.frontend.entryPoints=http,https"
+        - "traefik.frontend.passHostHeader=true"
+    volumes:
+      - ${STACK_BASE_PATH}/index.html:/opt/echoip/index.html:ro
+
+networks:
+  private:
+    driver: overlay
+    attachable: true
+
+  traefik-public:
+    external: true
+
