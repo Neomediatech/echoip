@@ -10,7 +10,7 @@ services:
     hostname: echoip
     networks:
       - traefik-public
-    command: ["--trusted-header=X-Real-IP", "-r"]
+    command: ["--trusted-header=X-Real-IP", "-r", "--city-db=/data/city.mmdb","--country-db=/data/country.mmdb","--asn-db=/data/asn.mmdb"]
     deploy:
       mode: replicated
       replicas: 1
@@ -37,6 +37,7 @@ services:
         - "traefik.frontend.rateLimit.extractorFunc=client.ip"
     volumes:
       - ${STACK_BASE_PATH}/index.html:/opt/echoip/index.html:ro
+      - ${STACK_BASE_PATH}/:/data
 
 networks:
   traefik-public:
